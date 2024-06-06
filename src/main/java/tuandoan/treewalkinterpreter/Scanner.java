@@ -99,7 +99,10 @@ class Scanner {
             case '/':
                 if (match('/' )) {
                     while (peek() != '\n' && !isAtEnd()) advance();
-                } else {
+                } else if (match('*')) {
+                    blockComment();
+                }
+                else {
                     addToken(TokenType.SLASH);
                 }
             case ' ':
@@ -158,6 +161,19 @@ class Scanner {
         // Trim the surround quotes.
         String value = source.substring(start + 1, current - 1);
         addToken(TokenType.STRING, value);
+    }
+
+    private void blockComment() {
+        int open = 1;
+        int close = 0;
+        while (!isAtEnd() && open != close) {
+            char next = advance();
+            if (next == '\n') line++;
+            else if (next == '/' && match('*')) open++;
+            else if (next == '*' && match('/')) close++;
+        }
+
+        if (open != close) Lox.error(line, "Unterminated block comment.");
     }
 
     private void number() {
