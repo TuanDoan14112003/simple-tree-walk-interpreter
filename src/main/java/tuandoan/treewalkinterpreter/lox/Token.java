@@ -1,4 +1,4 @@
-package tuandoan.treewalkinterpreter;
+package tuandoan.treewalkinterpreter.lox;
 
 class Token {
     final TokenType type;

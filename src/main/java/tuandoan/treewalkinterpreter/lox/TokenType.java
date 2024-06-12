@@ -1,4 +1,4 @@
-package tuandoan.treewalkinterpreter;
+package tuandoan.treewalkinterpreter.lox;
 
 enum TokenType {
     // Single-character tokens.

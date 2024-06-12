@@ -1,4 +1,4 @@
-package tuandoan.treewalkinterpreter;
+package tuandoan.treewalkinterpreter.lox;
 
 import java.io.BufferedReader;
 import java.io.IOException;
