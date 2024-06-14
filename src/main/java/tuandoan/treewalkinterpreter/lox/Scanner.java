@@ -97,7 +97,7 @@ class Scanner {
                 addToken(match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER);
                 break;
             case '/':
-                if (match('/' )) {
+                if (match('/')) {
                     while (peek() != '\n' && !isAtEnd()) advance();
                 } else {
                     addToken(TokenType.SLASH);
@@ -117,8 +117,7 @@ class Scanner {
                     number();
                 } else if (isAlpha(c)) {
                     identifier();
-                }
-                else {
+                } else {
                     Lox.error(line, "Unexpected character.");
                 }
                 break;
@@ -171,7 +170,7 @@ class Scanner {
 
         while (isDigit(peek())) advance();
 
-        Double value = Double.parseDouble(source.substring(start,current));
+        Double value = Double.parseDouble(source.substring(start, current));
         addToken(TokenType.NUMBER, value);
     }
 
