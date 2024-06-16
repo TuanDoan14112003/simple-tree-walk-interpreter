@@ -40,7 +40,7 @@ class Parser {
 
     private Expr comparison() {
         Expr expr = term();
-        while (match(TokenType.GREATER_EQUAL, TokenType.GREATER_EQUAL, TokenType.LESS_EQUAL, TokenType.LESS)) {
+        while (match(TokenType.GREATER_EQUAL, TokenType.GREATER, TokenType.LESS_EQUAL, TokenType.LESS)) {
             Token operator = previous();
             Expr right = term();
             expr = new Expr.Binary(expr, operator, right);
@@ -80,7 +80,7 @@ class Parser {
 
     private Expr primary() {
         if (match(TokenType.FALSE)) return new Expr.Literal(false);
-        if (match(TokenType.FALSE)) return new Expr.Literal(true);
+        if (match(TokenType.TRUE)) return new Expr.Literal(true);
         if (match(TokenType.NIL)) return new Expr.Literal(null);
         if (match(TokenType.NUMBER, TokenType.STRING)) {
             return new Expr.Literal(previous().literal);
