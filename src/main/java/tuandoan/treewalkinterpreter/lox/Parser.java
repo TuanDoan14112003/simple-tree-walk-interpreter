@@ -23,19 +23,18 @@ class Parser {
     }
 
     private Expr expression() {
-        return comma();
+        return ternary();
     }
 
-    private Expr comma() {
-        Expr expr = equality();
-
-        while (match(TokenType.COMMA)) {
-            Token operator = previous();
-            Expr right = equality();
-            expr = new Expr.Binary(expr, operator, right);
+    private Expr ternary() {
+        Expr condition = equality();
+        if (match(TokenType.QUESTION_MARK)) {
+            Expr left = expression();
+            consume(TokenType.COLON, ": is expected in a ternary expression");
+            Expr right = ternary();
+            condition = new Expr.Ternary(condition, left, right);
         }
-
-        return expr;
+        return condition;
     }
 
     private Expr equality() {
