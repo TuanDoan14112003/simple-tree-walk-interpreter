@@ -92,6 +92,31 @@ class Parser {
             return new Expr.Grouping(expr);
         }
 
+        if (match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
+            error(previous(),"Expect left operand"); // not throwing the exception because we want to keep parsing
+            equality();
+            return null;
+        }
+
+        if (match(TokenType.GREATER_EQUAL,
+                TokenType.GREATER,TokenType.LESS_EQUAL, TokenType.LESS)) {
+            error(previous(),"Expect left operand");
+            comparison();
+            return null;
+        }
+
+        if (match(TokenType.PLUS)) {
+            error(previous(),"Expect left operand");
+            term();
+            return null;
+        }
+
+        if (match(TokenType.STAR, TokenType.SLASH)) {
+            error(previous(),"Expect left operand");
+            factor();
+            return null;
+        }
+
         throw error(peek(), "Expect expression.");
     }
 
