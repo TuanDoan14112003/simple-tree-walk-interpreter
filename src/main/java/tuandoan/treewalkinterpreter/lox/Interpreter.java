@@ -14,12 +14,24 @@ class Interpreter implements Expr.Visitor<Object> {
     @Override
     public Object visitUnaryExpr(Expr.Unary expr) {
         Object right = evaluate(expr.right);
-        return switch (expr.operator.type) {
-            case MINUS -> -(double) right;
-            case BANG -> !isTruthy(right);
-            default -> null;
-        };
+        switch (expr.operator.type) {
+            case MINUS:
+                checkNumberOperand(expr.operator, right);
+                return -(double) right;
+            case BANG:
+                return !isTruthy(right);
+        }
+        return null;
+    }
 
+    private void checkNumberOperand(Token operator, Object operand) {
+        if (operand instanceof Double) return;
+        throw new RuntimeError(operator, "Operand must be a number");
+    }
+
+    private void checkNumberOperands(Token operator, Object left, Object right) {
+        if (left instanceof Double && right instanceof Double) return;
+        throw new RuntimeError(operator, "Operands must be numbers");
     }
 
     @Override
@@ -29,29 +41,36 @@ class Interpreter implements Expr.Visitor<Object> {
 
         switch (expr.operator.type) {
             case MINUS:
-                return (double)left - (double)right;
+                checkNumberOperands(expr.operator, left, right);
+                return (double) left - (double) right;
             case PLUS:
                 if (left instanceof Double && right instanceof Double) {
-                    return (double)left + (double)right;
+                    return (double) left + (double) right;
                 }
                 if (left instanceof String && right instanceof String) {
-                    return (String)left + (String)right;
+                    return (String) left + (String) right;
                 }
-                break;
+                throw new RuntimeError(expr.operator, "Operands must be two numbers or two strings");
             case SLASH:
-                return (double)left / (double)right;
+                checkNumberOperands(expr.operator, left, right);
+                return (double) left / (double) right;
             case STAR:
-                return (double)left * (double)right;
+                checkNumberOperands(expr.operator, left, right);
+                return (double) left * (double) right;
             case GREATER:
-                return (double)left > (double)right;
+                checkNumberOperands(expr.operator, left, right);
+                return (double) left > (double) right;
             case GREATER_EQUAL:
-                return (double)left >= (double)right;
+                checkNumberOperands(expr.operator, left, right);
+                return (double) left >= (double) right;
             case LESS:
-                return (double)left < (double)right;
+                checkNumberOperands(expr.operator, left, right);
+                return (double) left < (double) right;
             case LESS_EQUAL:
-                return (double)left <= (double)right;
+                checkNumberOperands(expr.operator, left, right);
+                return (double) left <= (double) right;
             case BANG_EQUAL:
-                    return !isEqual(left, right);
+                return !isEqual(left, right);
             case EQUAL_EQUAL:
                 return isEqual(left, right);
         }
@@ -61,14 +80,14 @@ class Interpreter implements Expr.Visitor<Object> {
 
     private boolean isEqual(Object left, Object right) {
         if (left == null & right == null) return true;
-        if(left == null) return false;
+        if (left == null) return false;
 
         return left.equals(right);
     }
 
     private boolean isTruthy(Object expr) {
         if (expr == null) return false;
-        if (expr instanceof Boolean) return (boolean)expr;
+        if (expr instanceof Boolean) return (boolean) expr;
         return true;
     }
 
