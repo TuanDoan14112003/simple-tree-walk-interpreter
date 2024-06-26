@@ -14,15 +14,23 @@ class Environment {
         this.enclosing = enclosing;
     }
 
-    private final Map<String, Object> values = new HashMap<>();
+    private final Map<String, Map<String, Object>> values = new HashMap<>();
 
-    void define(String name, Object value) {
-        values.put(name, value);
+    void define(String name, Object value, boolean initialized) {
+        Map<String, Object> mapValue = new HashMap<>();
+        mapValue.put("value", value);
+        mapValue.put("initialized", initialized);
+        values.put(name, mapValue);
     }
 
     Object get(Token name) {
         if (values.containsKey(name.lexeme)) {
-            return values.get(name.lexeme);
+            Map<String,Object> mapValue = values.get(name.lexeme);
+            if ((boolean) mapValue.get("initialized")) {
+                return mapValue.get("value");
+            } else {
+                throw new RuntimeError(name, "Uninitialized variable '" + name.lexeme + "'.");
+            }
         }
 
         if (enclosing != null) {
@@ -34,7 +42,8 @@ class Environment {
 
     void assign(Token name, Object value) {
         if (values.containsKey(name.lexeme)) {
-            values.put(name.lexeme, value);
+            Map<String, Object> mapValue = Map.of("value", value,"initialized", true);
+            values.put(name.lexeme, mapValue);
             return;
         }
 
