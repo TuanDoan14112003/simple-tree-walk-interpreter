@@ -10,6 +10,11 @@ class LoxFunction implements LoxCallable {
     }
 
     @Override
+    public int arity() {
+        return this.declaration.params.size();
+    }
+
+    @Override
     public Object call(Interpreter interpreter, List<Object> arguments) {
         Environment environment = new Environment(interpreter.globals);
         for (int i = 0; i < arguments.size(); ++i) {
@@ -18,5 +23,10 @@ class LoxFunction implements LoxCallable {
 
         interpreter.executeBlock(declaration.body, environment);
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return "<fn " + declaration.name.lexeme + ">";
     }
 }
