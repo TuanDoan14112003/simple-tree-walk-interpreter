@@ -50,6 +50,7 @@ class Parser {
         if (match(TokenType.FOR)) return forStatement();
         if (match(TokenType.IF)) return ifStatement();
         if (match(TokenType.PRINT)) return printStatement();
+        if (match(TokenType.RETURN)) return returnStatement();
         if (match(TokenType.LEFT_BRACE)) return new Stmt.Block(block());
         if (match(TokenType.WHILE)) return whileStatement();
         return expressionStatement();
@@ -126,6 +127,17 @@ class Parser {
         return new Stmt.Print(value);
     }
 
+    private Stmt returnStatement() {
+        Token keyword = previous();
+        Expr value = null;
+        if (!check(TokenType.SEMICOLON)) {
+            value = expression();
+        }
+
+        consume(TokenType.SEMICOLON, "Expect ';' after return value");
+        return new Stmt.Return(keyword, value);
+    }
+
     private Stmt expressionStatement() {
         Expr expr = expression();
         consume(TokenType.SEMICOLON, "Expect ';' after expression.");
@@ -147,7 +159,7 @@ class Parser {
             } while(match(TokenType.COMMA));
         }
         consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
-        consume(TokenType.LEFT_PAREN, "Expect '{' before " + kind + " body");
+        consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body");
         List<Stmt> body = block();
         return new Stmt.Function(name, parameters, body);
     }
