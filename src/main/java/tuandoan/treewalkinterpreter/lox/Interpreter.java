@@ -1,6 +1,5 @@
 package tuandoan.treewalkinterpreter.lox;
 
-import java.awt.event.TextEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -155,6 +154,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return function.call(this, arguments);
     }
 
+    @Override
+    public Object visitFunctionExpr(Expr.Function expr) {
+        return new LoxFunction("anonymous", expr, environment);
+    }
+
     private boolean isEqual(Object left, Object right) {
         if (left == null & right == null) return true;
         if (left == null) return false;
@@ -204,7 +208,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
-        LoxFunction function = new LoxFunction(stmt, environment);
+        LoxFunction function = new LoxFunction(stmt.name.lexeme, stmt.functionObject , environment);
         environment.define(stmt.name.lexeme, function);
         return null;
     }

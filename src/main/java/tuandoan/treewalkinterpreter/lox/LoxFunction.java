@@ -3,28 +3,30 @@ package tuandoan.treewalkinterpreter.lox;
 import java.util.List;
 
 class LoxFunction implements LoxCallable {
-    private final Stmt.Function declaration;
+    private final Expr.Function functionObject;
     private final Environment closure;
+    private final String name;
 
 
-    LoxFunction (Stmt.Function declaration, Environment closure) {
-        this.declaration = declaration;
+    LoxFunction (String name, Expr.Function functionObject, Environment closure) {
+        this.name = name;
+        this.functionObject = functionObject;
         this.closure = closure;
     }
 
     @Override
     public int arity() {
-        return this.declaration.params.size();
+        return this.functionObject.params.size();
     }
 
     @Override
     public Object call(Interpreter interpreter, List<Object> arguments) {
         Environment environment = new Environment(closure);
         for (int i = 0; i < arguments.size(); ++i) {
-            environment.define(declaration.params.get(i).lexeme, arguments.get(i));
+            environment.define(functionObject.params.get(i).lexeme, arguments.get(i));
         }
         try {
-            interpreter.executeBlock(declaration.body, environment);
+            interpreter.executeBlock(functionObject.body, environment);
         } catch (Return returnValue) {
             return returnValue.value;
         }
@@ -34,6 +36,6 @@ class LoxFunction implements LoxCallable {
 
     @Override
     public String toString() {
-        return "<fn " + declaration.name.lexeme + ">";
+        return "<fn " + name + ">";
     }
 }
