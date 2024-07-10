@@ -27,7 +27,10 @@ class Parser {
 
     private Stmt declaration() {
         try {
-            if (check(TokenType.FUN) && checkNext(TokenType.IDENTIFIER)) return functionStatement("function");
+            if (check(TokenType.FUN) && checkNext(TokenType.IDENTIFIER)) {
+                consume(TokenType.FUN, null);
+                return functionStatement("function");
+            }
             if (match(TokenType.VAR)) return varDeclaration();
             return statement();
         } catch (ParseError error) {
@@ -145,7 +148,6 @@ class Parser {
     }
 
     private Stmt.Function functionStatement(String kind) {
-        match(TokenType.FUN);
         Token name = consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
         Expr.Function function = functionExpression(kind);
         return new Stmt.Function(name, function);
@@ -338,7 +340,8 @@ class Parser {
     }
 
     private boolean checkNext(TokenType type) {
-        if (current + 1 >= tokens.size()) return false;
+        if (isAtEnd()) return false;
+        if (tokens.get(current + 1).type == TokenType.EOF) return false;
         return tokens.get(current + 1).type == type;
     }
 
