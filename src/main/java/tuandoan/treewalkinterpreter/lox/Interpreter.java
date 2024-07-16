@@ -275,6 +275,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         } else {
             globals.assign(expr.name, value);
         }
+        return value;
     }
 
     private Object lookUpVariable(Token name, Expr expr) {
@@ -282,7 +283,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (distance != null) {
             return environment.getAt(distance, name.lexeme);
         } else {
-            globals.get(name);
+            return globals.get(name);
         }
     }
 }
