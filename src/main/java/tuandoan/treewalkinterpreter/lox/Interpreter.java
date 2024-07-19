@@ -1,6 +1,5 @@
 package tuandoan.treewalkinterpreter.lox;
 
-import java.awt.event.TextEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,12 +7,13 @@ import java.util.Map;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
-    final Environment globals = new Environment();
-    private Environment environment = globals;
+    final Map<String, Object> globals = new HashMap<String, Object>();
+    private Environment environment;
     private final Map<Expr, Integer> locals = new HashMap<>();
+    private final Map<Expr, Integer> indexes = new HashMap<>();
 
     Interpreter() {
-        globals.define("clock", new LoxCallable() {
+        globals.put("clock", new LoxCallable() {
             @Override
             public int arity() { return 0; }
             @Override
@@ -179,8 +179,9 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         statement.accept(this);
     }
 
-    void resolve(Expr expr, int depth) {
+    void resolve(Expr expr, int depth, int variableIndex) {
         locals.put(expr, depth);
+        indexes.put(expr, variableIndex);
     }
 
     @Override
@@ -212,7 +213,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
         LoxFunction function = new LoxFunction(stmt, environment);
-        environment.define(stmt.name.lexeme, function);
+        define(stmt.name, function);
         return null;
     }
 
@@ -247,7 +248,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             value = evaluate(stmt.initializer);
         }
 
-        environment.define(stmt.name.lexeme, value);
+        define(stmt.name, value);
+
         return null;
     }
 
@@ -265,25 +267,43 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
 
-
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
         Integer distance = locals.get(expr);
+        Integer index = indexes.get(expr);
+
         if (distance != null) {
-            environment.assignAt(distance, expr.name, value);
+            environment.assignAt(distance, index, value);
         } else {
-            globals.assign(expr.name, value);
+            if (globals.containsKey(expr.name.lexeme)) {
+                globals.put(expr.name.lexeme, value);
+            } else {
+                throw new RuntimeError(expr.name, "Undefined variable '" + expr.name.lexeme + "'.");
+            }
         }
         return value;
     }
 
     private Object lookUpVariable(Token name, Expr expr) {
         Integer distance = locals.get(expr);
+        Integer variableIndex = indexes.get(expr);
         if (distance != null) {
-            return environment.getAt(distance, name.lexeme);
+            return environment.getAt(distance, variableIndex);
         } else {
-            return globals.get(name);
+            if (globals.containsKey(name.lexeme)) {
+                return globals.get(name.lexeme);
+            } else {
+                throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
+            }
+        }
+    }
+
+    private void define(Token name, Object value) {
+        if (environment == null) {
+            globals.put(name.lexeme, value);
+        } else {
+            environment.define( value);
         }
     }
 }
