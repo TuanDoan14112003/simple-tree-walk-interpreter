@@ -28,7 +28,7 @@ class Parser {
     private Stmt declaration() {
         try {
             if (match(TokenType.CLASS)) return classDeclaration();
-            if (match(TokenType.FUN)) return function("function");
+            if (match(TokenType.FUN)) return function("function", false);
             if (match(TokenType.VAR)) return varDeclaration();
             return statement();
         } catch (ParseError error) {
@@ -42,7 +42,9 @@ class Parser {
         consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
         List<Stmt.Function> methods = new ArrayList<>();
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            methods.add(function("method"));
+            boolean isStatic = match(TokenType.CLASS);
+
+            methods.add(function("method", isStatic));
         }
         consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
         return new Stmt.Class(name, methods);
@@ -156,8 +158,11 @@ class Parser {
         return new Stmt.Expression(expr);
     }
 
-    private Stmt.Function function(String kind) {
+    private Stmt.Function function(String kind, boolean isStatic) {
         Token name = consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
+        if (name.lexeme.equals("init") && isStatic) {
+            error(previous(), "Can't define static constructor");
+        }
         consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
         List<Token> parameters = new ArrayList<>();
         if (!check(TokenType.RIGHT_PAREN)) {
@@ -173,7 +178,7 @@ class Parser {
         consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
         consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body");
         List<Stmt> body = block();
-        return new Stmt.Function(name, parameters, body);
+        return new Stmt.Function(name, parameters, body, isStatic);
     }
 
     private List<Stmt> block() {
