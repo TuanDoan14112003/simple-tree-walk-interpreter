@@ -179,7 +179,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitGetExpr(Expr.Get expr) {
         Object object = evaluate(expr.object);
         if (object instanceof LoxInstance) {
-            return ((LoxInstance) object).get(expr.name);
+            return ((LoxInstance) object).get(expr.name, this);
         }
 
         throw new RuntimeError(expr.name, "Only instances have properties");
@@ -221,12 +221,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         environment.define(stmt.name.lexeme, null);
 
         Map<String, LoxFunction> methods = new HashMap<>();
+        Map<String, LoxProperty> properties = new HashMap<>();
+
         for (Stmt.Function method : stmt.methods) {
             LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.equals("init"));
             methods.put(method.name.lexeme, function);
         }
 
-        LoxClass klass = new LoxClass(stmt.name.lexeme, methods);
+        for (Stmt.Property property : stmt.properties) {
+            LoxProperty loxProperty = new LoxProperty(property, environment);
+            properties.put(property.name.lexeme, loxProperty);
+        }
+
+        LoxClass klass = new LoxClass(stmt.name.lexeme, methods, properties);
         environment.assign(stmt.name, klass);
         return null;
     }
@@ -255,6 +262,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Void visitFunctionStmt(Stmt.Function stmt) {
         LoxFunction function = new LoxFunction(stmt, environment, false);
         environment.define(stmt.name.lexeme, function);
+        return null;
+    }
+
+    @Override
+    public Void visitPropertyStmt(Stmt.Property stmt) {
         return null;
     }
 

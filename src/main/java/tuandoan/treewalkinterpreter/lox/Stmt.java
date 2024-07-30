@@ -8,6 +8,7 @@ abstract class Stmt {
 		R visitClassStmt(Class stmt);
 		R visitExpressionStmt(Expression stmt);
 		R visitFunctionStmt(Function stmt);
+		R visitPropertyStmt(Property stmt);
 		R visitIfStmt(If stmt);
 		R visitPrintStmt(Print stmt);
 		R visitReturnStmt(Return stmt);
@@ -28,9 +29,10 @@ abstract class Stmt {
 	}
 
 	static class Class extends Stmt {
-		Class(Token name, List<Stmt.Function> methods) {
+		Class(Token name, List<Stmt.Function> methods, List<Stmt.Property> properties) {
 			this.name = name;
 			this.methods = methods;
+			this.properties = properties;
 		}
 
 		@Override
@@ -40,6 +42,7 @@ abstract class Stmt {
 
 		final Token name;
 		final List<Stmt.Function> methods;
+		final List<Stmt.Property> properties;
 	}
 
 	static class Expression extends Stmt {
@@ -69,6 +72,21 @@ abstract class Stmt {
 
 		final Token name;
 		final List<Token> params;
+		final List<Stmt> body;
+	}
+
+	static class Property extends Stmt {
+		Property(Token name, List<Stmt> body) {
+			this.name = name;
+			this.body = body;
+		}
+
+		@Override
+		<R> R accept(Visitor<R> visitor) {
+			return visitor.visitPropertyStmt(this);
+		}
+
+		final Token name;
 		final List<Stmt> body;
 	}
 

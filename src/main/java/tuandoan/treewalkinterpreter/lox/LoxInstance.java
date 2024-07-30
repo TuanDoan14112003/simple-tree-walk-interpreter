@@ -16,10 +16,13 @@ class LoxInstance {
         return klass.name + " instance";
     }
 
-    Object get(Token name) {
+    Object get(Token name, Interpreter interpreter) {
         if (fields.containsKey(name.lexeme)) {
             return fields.get(name.lexeme);
         }
+
+        LoxProperty property = klass.findProperty(name.lexeme);
+        if (property != null) return property.execute(this, interpreter);
 
         LoxFunction method = klass.findMethod(name.lexeme);
         if (method != null) return method.bind(this);

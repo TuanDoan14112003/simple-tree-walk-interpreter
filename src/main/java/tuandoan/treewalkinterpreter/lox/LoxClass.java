@@ -6,10 +6,13 @@ import java.util.Map;
 class LoxClass implements LoxCallable {
     final String name;
     private final Map<String, LoxFunction> methods;
+    private final Map<String, LoxProperty> properties;
 
-    LoxClass(String name, Map<String, LoxFunction> methods) {
+
+    LoxClass(String name, Map<String, LoxFunction> methods, Map<String, LoxProperty> properties) {
         this.name = name;
         this.methods = methods;
+        this.properties = properties;
     }
 
     LoxFunction findMethod(String name) {
@@ -17,6 +20,13 @@ class LoxClass implements LoxCallable {
             return methods.get(name);
         }
 
+        return null;
+    }
+
+    LoxProperty findProperty(String name) {
+        if (properties.containsKey(name)) {
+            return properties.get(name);
+        }
         return null;
     }
 

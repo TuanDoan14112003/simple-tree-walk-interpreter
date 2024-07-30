@@ -77,6 +77,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             resolveFunction(method, declaration);
         }
 
+        for (Stmt.Property property : stmt.properties) {
+            resolve(property);
+        }
+
         endScope();
         currentClass = enclosingClass;
         return null;
@@ -114,6 +118,17 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         declare(stmt.name);
         define(stmt.name);
         resolveFunction(stmt, FunctionType.FUNCTION);
+        return null;
+    }
+
+    @Override
+    public Void visitPropertyStmt(Stmt.Property property) {
+        FunctionType enclosingFunction = currentFunction;
+        currentFunction = FunctionType.METHOD;
+        beginScope();
+        resolve(property.body);
+        endScope();
+        currentFunction = enclosingFunction;
         return null;
     }
 
@@ -234,7 +249,6 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         endScope();
         currentFunction = enclosingFunction;
     }
-
 
     private void resolveLocal(Expr expr, Token name) {
         for (int i = scopes.size() - 1; i >= 0; i--) {
