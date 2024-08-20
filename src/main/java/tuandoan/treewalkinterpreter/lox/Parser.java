@@ -28,6 +28,7 @@ class Parser {
     private Stmt declaration() {
         try {
             if (match(TokenType.CLASS)) return classDeclaration();
+            if (match(TokenType.TRAIT)) return traitDeclaration();
             if (match(TokenType.FUN)) return function("function");
             if (match(TokenType.VAR)) return varDeclaration();
             return statement();
@@ -37,6 +38,31 @@ class Parser {
         }
     }
 
+    private Stmt traitDeclaration() {
+        Token name = consume(TokenType.IDENTIFIER, "Expect trait name.");
+
+        List<Expr.Variable> parentTraits = withClause();
+
+        consume(TokenType.LEFT_BRACE, "Expect '{' before trait body.");
+        List<Stmt.Function> methods = new ArrayList<>();
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(function("method"));
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after trait body.");
+        return new Stmt.Trait(name,parentTraits,methods);
+    }
+
+    private List<Expr.Variable> withClause() {
+        List<Expr.Variable> parentTraits = new ArrayList<>();
+        if (match(TokenType.WITH)) {
+            do {
+                consume(TokenType.IDENTIFIER, "Expect trait name.");
+                parentTraits.add(new Expr.Variable(previous()));
+            } while (!isAtEnd() && match(TokenType.COMMA));
+        }
+        return parentTraits;
+    }
+
     private Stmt classDeclaration() {
         Token name = consume(TokenType.IDENTIFIER, "Expect class name");
         Expr.Variable superclass = null;
@@ -44,13 +70,15 @@ class Parser {
             consume(TokenType.IDENTIFIER, "Expect superclass name.");
             superclass = new Expr.Variable(previous());
         }
+        List<Expr.Variable> parentTraits = withClause();
+
         consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
         List<Stmt.Function> methods = new ArrayList<>();
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             methods.add(function("method"));
         }
         consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
-        return new Stmt.Class(name, superclass, methods);
+        return new Stmt.Class(name, superclass, parentTraits, methods);
     }
 
     private Stmt varDeclaration() {

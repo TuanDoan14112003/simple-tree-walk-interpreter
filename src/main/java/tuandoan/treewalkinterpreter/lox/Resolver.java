@@ -19,7 +19,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private enum ClassType {
         NONE,
         CLASS,
-        SUBCLASS
+        SUBCLASS,
+        TRAIT
     }
 
     private ClassType currentClass = ClassType.NONE;
@@ -76,6 +77,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             resolve(stmt.superclass);
         }
 
+        for (var trait: stmt.parentTraits) {
+            resolve(trait);
+        }
+
         if (stmt.superclass != null) {
             beginScope();
             scopes.peek().put("super", true);
@@ -95,6 +100,32 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         endScope();
         if (stmt.superclass != null) endScope();
         currentClass = enclosingClass;
+        return null;
+    }
+
+    @Override
+    public Void visitTraitStmt(Stmt.Trait stmt) {
+        declare(stmt.name);
+        define(stmt.name);
+        ClassType enclosingClass = currentClass;
+        currentClass = ClassType.TRAIT;
+
+        for (var trait: stmt.parentTraits) {
+            resolve(trait);
+        }
+
+
+        beginScope();
+        scopes.peek().put("this", true);
+
+        for (Stmt.Function method : stmt.methods) {
+            FunctionType declaration = FunctionType.METHOD;
+            resolveFunction(method, declaration);
+        }
+        endScope();
+
+        currentClass = enclosingClass;
+
         return null;
     }
 
@@ -220,6 +251,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitSuperExpr(Expr.Super expr) {
         if (currentClass == ClassType.NONE) {
             Lox.error(expr.keyword, "Can't user 'super' outside of a class");
+        } else if (currentClass == ClassType.TRAIT) {
+            Lox.error(expr.keyword, "Can't user 'super' in a trait");
+
         } else if (currentClass != ClassType.SUBCLASS) {
             Lox.error(expr.keyword, "Can't user 'super' with no superclass");
         }

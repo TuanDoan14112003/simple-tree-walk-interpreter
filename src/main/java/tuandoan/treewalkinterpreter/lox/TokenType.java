@@ -3,7 +3,7 @@ package tuandoan.treewalkinterpreter.lox;
 enum TokenType {
     // Single-character tokens.
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
-    COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
+    COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR, TRAIT, WITH,
 
     // One or two characters tokens
     BANG, BANG_EQUAL,

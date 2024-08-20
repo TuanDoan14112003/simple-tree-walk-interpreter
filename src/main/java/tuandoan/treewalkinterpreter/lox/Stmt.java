@@ -6,6 +6,7 @@ abstract class Stmt {
 	interface Visitor<R> {
 		R visitBlockStmt(Block stmt);
 		R visitClassStmt(Class stmt);
+		R visitTraitStmt(Trait stmt);
 		R visitExpressionStmt(Expression stmt);
 		R visitFunctionStmt(Function stmt);
 		R visitIfStmt(If stmt);
@@ -28,9 +29,10 @@ abstract class Stmt {
 	}
 
 	static class Class extends Stmt {
-		Class(Token name, Expr.Variable superclass, List<Stmt.Function> methods) {
+		Class(Token name, Expr.Variable superclass, List<Expr.Variable> parentTraits, List<Stmt.Function> methods) {
 			this.name = name;
 			this.superclass = superclass;
+			this.parentTraits = parentTraits;
 			this.methods = methods;
 		}
 
@@ -41,6 +43,24 @@ abstract class Stmt {
 
 		final Token name;
 		final Expr.Variable superclass;
+		final List<Expr.Variable> parentTraits;
+		final List<Stmt.Function> methods;
+	}
+
+	static class Trait extends Stmt {
+		Trait(Token name, List<Expr.Variable> parentTraits, List<Stmt.Function> methods) {
+			this.name = name;
+			this.parentTraits = parentTraits;
+			this.methods = methods;
+		}
+
+		@Override
+		<R> R accept(Visitor<R> visitor) {
+			return visitor.visitTraitStmt(this);
+		}
+
+		final Token name;
+		final List<Expr.Variable> parentTraits;
 		final List<Stmt.Function> methods;
 	}
 

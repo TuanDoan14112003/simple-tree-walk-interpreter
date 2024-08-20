@@ -238,12 +238,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             }
         }
 
+
         environment.define(stmt.name.lexeme, null);
         if (stmt.superclass != null) {
             environment = new Environment(environment);
             environment.define("super",superclass);
         }
-        Map<String, LoxFunction> methods = new HashMap<>();
+        Map<String, LoxFunction> methods = applyTraits(stmt.parentTraits);
         for (Stmt.Function method : stmt.methods) {
             LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.equals("init"));
             methods.put(method.name.lexeme, function);
@@ -255,6 +256,42 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
         environment.assign(stmt.name, klass);
         return null;
+    }
+
+    @Override
+    public Void visitTraitStmt(Stmt.Trait stmt) {
+        environment.define(stmt.name.lexeme, null);
+
+        Map<String, LoxFunction> methods = applyTraits(stmt.parentTraits);
+        for (Stmt.Function method : stmt.methods) {
+            if (methods.containsKey(method.name.lexeme)) {
+                throw new RuntimeError(method.name, "A previous trait declares a method name '" + method.name.lexeme + "'.");
+            }
+            LoxFunction function = new LoxFunction(method, environment, false);
+            methods.put(method.name.lexeme, function);
+        }
+
+        LoxTrait trait = new LoxTrait(stmt.name, methods);
+        environment.assign(stmt.name, trait);
+        return null;
+    }
+
+    private Map<String, LoxFunction> applyTraits(List<Expr.Variable> parentTraits) {
+        Map<String, LoxFunction> methods = new HashMap<>();
+
+        for (var parentTrait : parentTraits) {
+            var trait = evaluate(parentTrait);
+            if (!(trait instanceof LoxTrait loxTrait)) {
+                throw new RuntimeError(parentTrait.name, "Parent trait must be a trait.");
+            }
+            for (var method: loxTrait.methods.keySet()) {
+                if (methods.containsKey(method)) {
+                    throw new RuntimeError(loxTrait.name, "A previous trait declares a method name '" + method + "'.");
+                }
+                methods.put(method,loxTrait.methods.get(method));
+            }
+        }
+        return methods;
     }
 
     void executeBlock(List<Stmt> statements, Environment environment) {
